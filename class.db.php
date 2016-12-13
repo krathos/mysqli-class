@@ -12,7 +12,7 @@
  *
  *
  * @link              https://github.com/nowendwell/mysqli-class
- * @version           1.0.0
+ * @version           1.0.1
  *
  * Description:       This is a short description of what the plugin does. It's displayed in the WordPress admin area.
  * Version:           1.0.0
@@ -66,23 +66,17 @@ class DB
 
         $args = func_get_args();
 
-        try {
-            if (sizeof( $args ) > 0)
-            {
-            	$this->link = new mysqli( $args[0], $args[1], $args[2], $args[3] );
-            } else {
-            	$this->link = new mysqli( DB_HOST, DB_USER, DB_PASSWORD, DB_NAME );
-            }
-        } catch ( Exception $e)
+        if (sizeof( $args ) > 0)
         {
-            $this->log_db_errors( "Connect failed", $this->link->connect_error );
-            die('Unable to connect to the database.');
+        	$this->link = new mysqli( $args[0], $args[1], $args[2], $args[3] );
+        } else {
+        	$this->link = new mysqli( DB_HOST, DB_USER, DB_PASSWORD, DB_NAME );
         }
-
+        
         if( $this->link->connect_errno )
         {
             $this->log_db_errors( "Connect failed", $this->link->connect_error );
-            exit;
+            die('Unable to connect to the database.');
         }
 
         $this->link->set_charset( "utf8" );
