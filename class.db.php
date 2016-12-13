@@ -15,7 +15,6 @@
  * @version           1.0.1
  *
  * Description:       This is a short description of what the plugin does. It's displayed in the WordPress admin area.
- * Version:           1.0.0
  * Last Update:       2016-12-13
  * Author:            Ben Miller
  * License:           MIT
