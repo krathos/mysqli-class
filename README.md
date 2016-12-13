@@ -21,13 +21,14 @@ This class can:
 - Display the total number of queries performed during all instances of the class
 
 # Usage
-````require_once "class.db.php";
+```php
+require_once "class.db.php";
 $db = new DB();
-foreach( $db->get_results( "SELECT * FROM users" ) as $result )
+foreach( $db->get_results( "SELECT * FROM users_table" ) as $result )
 {
   $name = $result['name'];
   $email = $result['email'];
   
   echo "Name: $name" . "<br />" . "Email: $email" . "<br /><br />";
 }
-````
+```
