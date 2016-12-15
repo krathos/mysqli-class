@@ -12,7 +12,7 @@
  *
  *
  * @link              https://github.com/nowendwell/mysqli-class
- * @version           1.0.3
+ * @version           1.1.0
  *
  * Description:       PHP MYSQLi Wrapper class
  * Last Update:       2016-12-13
@@ -136,6 +136,55 @@ class DB
             return $row;
         }
     }
+    
+    /**
+	 * Call Procedure with parameters
+	 *
+	 * @param   string    $procedure  Name of procedure
+	 * @param   array     $params     "param"=>"value"
+	 * @param   array     $responses
+	 * @return  bool
+	 */
+	public function call_procedure( $procedure, $params = array(), $responses = array() )
+	{
+		$this->log_queries( 'CALL $procedure ( '.implode(',',$params).' )' );
+
+		self::$counter++;
+
+		$sql = "CALL ". $procedure . '( ';
+
+		$param_sql = array();
+
+		foreach( $params as $field => $value )
+		{
+			if ($value === NULL)
+			{
+				$param_sql[] = "@$field := NULL";
+			} else {
+				$param_sql[] = "@$field := '$value'";
+			}
+		}
+
+		foreach( $responses as $field )
+		{
+			$param_sql[] = "@$field";
+		}
+
+		$sql .= implode(', ', $param_sql);
+		$sql .= ' )';
+
+		$query = $this->link->query( $sql );
+
+		if( $this->link->error )
+		{
+			$this->log_db_errors( $this->link->error, $sql );
+			return false;
+		}
+		else
+		{
+			return true;
+		}
+	}
 
 
     /**
