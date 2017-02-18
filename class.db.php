@@ -12,7 +12,7 @@
  *
  *
  * @link              https://github.com/nowendwell/mysqli-class
- * @version           1.2.0
+ * @version           1.2.1
  *
  * Description:       This is a short description of what the plugin does. It's displayed in the WordPress admin area.
  * Last Update:       2017-02-18
@@ -891,27 +891,21 @@ class DB
 	 *      'email' => 'email@address.com',
 	 *      'active' => 1
 	 * );
-     	 *
-     	 * $primary_key = 'id';
-     	 * $primary_key_value = '3';
-     	 *
-	 * $database->upsert( 'users_table', $user_data, $primary_key, $primary_key_value );
+	 * $database->upsert( 'users_table', $user_data);
 	 *
 	 * @access public
 	 * @param string table name
 	 * @param array table column => column value
-    	 * @param string Primary key name
-   	 * @param string Primary key value
 	 * @return bool
 	 *
 	 */
-	public function upsert( $table, $variables = array(), $primary_key, $primary_key_value )
+	public function upsert( $table, $variables = array() )
 	{
 		$this->log_queries( $query );
 
 		self::$counter++;
 		//Make sure the args aren't empty
-		if( empty( $table ) || empty( $variables ) || empty( $primary_key ) || empty( $primary_key_value ) )
+		if( empty( $table ) || empty( $variables ) )
 		{
 			return false;
 		}
@@ -919,13 +913,16 @@ class DB
 		$sql = "INSERT INTO ". $table;
 		$fields = array();
 		$values = array();
+        	$updates = array();
 		foreach( $variables as $field => $value )
 		{
 			$fields[] = $field;
 			if ($value === NULL){
 				$values[] = "NULL";
+                		$updates[] = "`$field` = NULL";
 			} else {
 				$values[] = "'".$value."'";
+                		$updates[] = "`$field` = '$value'";
 			}
 		}
 		$fields = ' (' . implode(', ', $fields) . ')';
@@ -933,11 +930,9 @@ class DB
 
 		$sql .= $fields .' VALUES '. $values;
 
-        	if (!is_numeric($primary_key_value)){
-            		$primary_key_value = "'".$primary_key_value."'";
-        	}
+		$sql .= ' ON DUPLICATE KEY UPDATE ';
 
-        	$sql .= ' ON DUPLICATE KEY UPDATE ' . $primary_key . '=' . $primary_key_value;
+        	$sql .= implode(', ', $updates);
 
 		$query = $this->link->query( $sql );
 
