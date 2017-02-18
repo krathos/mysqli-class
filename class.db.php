@@ -12,7 +12,7 @@
 *
 *
 * @link              https://github.com/nowendwell/mysqli-class
-* @version           1.2.2
+* @version           1.3.0
 *
 * Description:       This is a short description of what the plugin does. It's displayed in the WordPress admin area.
 * Last Update:       2017-02-18
@@ -57,7 +57,6 @@ class DB
 	static $inst = null;
 	public static $counter = 0;
 	public $queries = array();
-
 
 	public function __construct()
 	{
@@ -396,6 +395,7 @@ class DB
 		$this->log_queries( $query );
 
 		$full_query = $this->link->query( $query );
+
 		if( $this->link->error )
 		{
 			$this->log_db_errors( $this->link->error, $query );
@@ -1176,6 +1176,22 @@ class DB
 	public function total_queries()
 	{
 		return self::$counter;
+	}
+
+
+	/**
+	* Get the last query
+	*
+	* Example usage:
+	* echo $database->last_query();
+	*
+	* @access public
+	* @return string
+	*/
+	public function last_query()
+	{
+		$last_query = array_values(array_slice($this->queries, -1))[0];
+		return $last_query;
 	}
 
 
