@@ -12,10 +12,10 @@
  *
  *
  * @link              https://github.com/nowendwell/mysqli-class
- * @version           1.1.0
+ * @version           1.2.0
  *
  * Description:       This is a short description of what the plugin does. It's displayed in the WordPress admin area.
- * Last Update:       2016-12-15
+ * Last Update:       2017-02-18
  * Author:            Ben Miller
  * License:           MIT
  * License URI:       https://opensource.org/licenses/MIT
@@ -183,14 +183,8 @@ class DB
 			return true;
 		}
 	}
-
-	/**
-	 * Call Procedure with parameters
-	 *
-	 * @param string $procedure Name of procedure
-	 * @param
-
-
+	
+	
 	/**
 	 * Show the definition of a Function
 	 *
@@ -886,8 +880,79 @@ class DB
 			return true;
 		}
 	}
+	
+	
+	/**
+	 * Upserts data into database table
+	 *
+	 * Example usage:
+	 * $user_data = array(
+	 *      'name' => 'Bennett',
+	 *      'email' => 'email@address.com',
+	 *      'active' => 1
+	 * );
+     	 *
+     	 * $primary_key = 'id';
+     	 * $primary_key_value = '3';
+     	 *
+	 * $database->upsert( 'users_table', $user_data, $primary_key, $primary_key_value );
+	 *
+	 * @access public
+	 * @param string table name
+	 * @param array table column => column value
+    	 * @param string Primary key name
+   	 * @param string Primary key value
+	 * @return bool
+	 *
+	 */
+	public function upsert( $table, $variables = array(), $primary_key, $primary_key_value )
+	{
+		$this->log_queries( $query );
 
+		self::$counter++;
+		//Make sure the args aren't empty
+		if( empty( $table ) || empty( $variables ) || empty( $primary_key ) || empty( $primary_key_value ) )
+		{
+			return false;
+		}
 
+		$sql = "INSERT INTO ". $table;
+		$fields = array();
+		$values = array();
+		foreach( $variables as $field => $value )
+		{
+			$fields[] = $field;
+			if ($value === NULL){
+				$values[] = "NULL";
+			} else {
+				$values[] = "'".$value."'";
+			}
+		}
+		$fields = ' (' . implode(', ', $fields) . ')';
+		$values = '('. implode(', ', $values) .')';
+
+		$sql .= $fields .' VALUES '. $values;
+
+        	if (!is_numeric($primary_key_value)){
+            		$primary_key_value = "'".$primary_key_value."'";
+        	}
+
+        	$sql .= ' ON DUPLICATE KEY UPDATE ' . $primary_key . '=' . $primary_key_value;
+
+		$query = $this->link->query( $sql );
+
+		if( $this->link->error )
+		{
+			$this->log_db_errors( $this->link->error, $sql );
+			return false;
+		}
+		else
+		{
+			return true;
+		}
+	}
+	
+	
 	/**
 	 * Delete data from table
 	 *
