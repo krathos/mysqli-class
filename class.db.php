@@ -1,25 +1,25 @@
 <?php
 
 /**
- * PHP MYSQLi Database Class
- *
- * This class helps developers make standardized calls across their entire 
- * application. This class was found and forked (bennettstone/simple-mysqli)
- * as a necessity after mysql_connect was deprecated and my site crashed. I 
- * was forced to go through each and every page of my site and edit each call
- * and thought there had to be a better way. Please feel free to use on your 
- * site and submit issues where necessary. Thank you and happy coding.
- *
- *
- * @link              https://github.com/nowendwell/mysqli-class
- * @version           1.2.2
- *
- * Description:       This is a short description of what the plugin does. It's displayed in the WordPress admin area.
- * Last Update:       2017-02-18
- * Author:            Ben Miller
- * License:           MIT
- * License URI:       https://opensource.org/licenses/MIT
- */
+* PHP MYSQLi Database Class
+*
+* This class helps developers make standardized calls across their entire
+* application. This class was found and forked (bennettstone/simple-mysqli)
+* as a necessity after mysql_connect was deprecated and my site crashed. I
+* was forced to go through each and every page of my site and edit each call
+* and thought there had to be a better way. Please feel free to use on your
+* site and submit issues where necessary. Thank you and happy coding.
+*
+*
+* @link              https://github.com/nowendwell/mysqli-class
+* @version           1.2.2
+*
+* Description:       This is a short description of what the plugin does. It's displayed in the WordPress admin area.
+* Last Update:       2017-02-18
+* Author:            Ben Miller
+* License:           MIT
+* License URI:       https://opensource.org/licenses/MIT
+*/
 
 
 // ** MySQL settings - You can get this info from your web host ** //
@@ -56,6 +56,7 @@ class DB
 	public $filter;
 	static $inst = null;
 	public static $counter = 0;
+	public $queries = array();
 
 
 	public function __construct()
@@ -65,7 +66,8 @@ class DB
 
 		$args = func_get_args();
 
-		if (sizeof($args) > 0){
+		if (sizeof($args) > 0)
+		{
 			$this->link = new mysqli( $args[0], $args[1], $args[2], $args[3] );
 		} else {
 			$this->link = new mysqli( DB_HOST, DB_USER, DB_PASSWORD, DB_NAME );
@@ -89,6 +91,8 @@ class DB
 
 	private function log_queries( $query )
 	{
+		$this->queries[] = $query;
+
 		if (SAVE_QUERIES_TO_LOG === true)
 		{
 			$file = 'queries.log';
@@ -98,12 +102,12 @@ class DB
 	}
 
 	/**
-	 * Show the definition of a Procedure
-	 *
-	 * @access public
-	 * @param string (Name of the procedure)
-	 * @return array
-	 */
+	* Show the definition of a Procedure
+	*
+	* @access public
+	* @param string (Name of the procedure)
+	* @return array
+	*/
 	public function show_procedure( $procedure )
 	{
 
@@ -112,13 +116,12 @@ class DB
 			return false;
 		}
 
-		$this->log_queries( $procedure );
-
 		self::$counter++;
 		//Overwrite the $row var to null
 		$row = null;
 
 		$results = $this->link->query( 'SHOW CREATE PROCEDURE ' . $procedure );
+
 		if( $this->link->error )
 		{
 			$this->log_db_errors( $this->link->error, $procedure );
@@ -136,16 +139,15 @@ class DB
 	}
 
 	/**
-	 * Call Procedure with parameters
-	 *
-	 * @param   string    $procedure  Name of procedure
-	 * @param   array     $params     "param"=>"value"
-	 * @param   array     $responses
-	 * @return  bool
-	 */
+	* Call Procedure with parameters
+	*
+	* @param   string    $procedure  Name of procedure
+	* @param   array     $params     "param"=>"value"
+	* @param   array     $responses
+	* @return  bool
+	*/
 	public function call_procedure( $procedure, $params = array(), $responses = array() )
 	{
-		$this->log_queries( 'CALL $procedure ( '.implode(',',$params).' )' );
 
 		self::$counter++;
 
@@ -159,7 +161,12 @@ class DB
 			{
 				$param_sql[] = "@$field := NULL";
 			} else {
-				$param_sql[] = "@$field := '$value'";
+				if (is_numeric($value))
+				{
+					$param_sql[] = "@$field := $value";
+				} else {
+					$param_sql[] = "@$field := '$value'";
+				}
 			}
 		}
 
@@ -183,15 +190,15 @@ class DB
 			return true;
 		}
 	}
-	
-	
+
+
 	/**
-	 * Show the definition of a Function
-	 *
-	 * @access public
-	 * @param string (Name of the function)
-	 * @return array
-	 */
+	* Show the definition of a Function
+	*
+	* @access public
+	* @param string (Name of the function)
+	* @return array
+	*/
 	public function show_function( $function )
 	{
 		if ( empty( $function ) )
@@ -199,13 +206,12 @@ class DB
 			return false;
 		}
 
-		$this->log_queries( $function );
-
 		self::$counter++;
 		//Overwrite the $row var to null
 		$row = null;
 
 		$results = $this->link->query( 'SHOW CREATE FUNCTION ' . $function );
+
 		if( $this->link->error )
 		{
 			$this->log_db_errors( $this->link->error, $function );
@@ -223,14 +229,14 @@ class DB
 	}
 
 	/**
-	 * Allow the class to send admins a message alerting them to errors
-	 * on production sites
-	 *
-	 * @access public
-	 * @param string $error
-	 * @param string $query
-	 * @return mixed
-	 */
+	* Allow the class to send admins a message alerting them to errors
+	* on production sites
+	*
+	* @access public
+	* @param string $error
+	* @param string $query
+	* @return mixed
+	*/
 	public function log_db_errors( $error, $query )
 	{
 		$message = '<p>Error at '. date('Y-m-d H:i:s').':</p>';
@@ -245,7 +251,7 @@ class DB
 			$headers  = 'MIME-Version: 1.0' . "\r\n";
 			$headers .= 'Content-type: text/html; charset=iso-8859-1' . "\r\n";
 			$headers .= 'To: Admin <'.SEND_ERRORS_TO.'>' . "\r\n";
-			$headers .= 'From: Agent Portal <gus@portal-amzwebcenter.com>' . "\r\n";
+			$headers .= 'From: Admin <'.SEND_ERRORS_TO.'>' . "\r\n";
 
 			if ( defined('SEND_EMAIL' ) && SEND_EMAIL === true)
 			{
@@ -262,92 +268,92 @@ class DB
 
 
 	/**
-	 * Sanitize user data
-	 *
-	 * Example usage:
-	 * $user_name = $database->filter( $_POST['user_name'] );
-	 *
-	 * Or to filter an entire array:
-	 * $data = array( 'name' => $_POST['name'], 'email' => 'email@address.com' );
-	 * $data = $database->filter( $data );
-	 *
-	 * @access public
-	 * @param mixed $data
-	 * @return mixed $data
-	 */
-	 public function filter( $data )
-	 {
-		 if( !is_array( $data ) )
-		 {
-			 $data = $this->link->real_escape_string( $data );
-			 $data = trim( htmlentities( $data, ENT_QUOTES, 'UTF-8', false ) );
-		 }
-		 else
-		 {
-			 //Self call function to sanitize array data
-			 $data = array_map( array( $this, 'filter' ), $data );
-		 }
-		 return $data;
-	 }
-
-
-	 /**
-	  * Extra function to filter when only mysqli_real_escape_string is needed
-	  * @access public
-	  * @param mixed $data
-	  * @return mixed $data
-	  */
-	 public function escape( $data )
-	 {
-		 if( !is_array( $data ) )
-		 {
-			 $data = $this->link->real_escape_string( $data );
-		 }
-		 else
-		 {
-			 //Self call function to sanitize array data
-			 $data = array_map( array( $this, 'escape' ), $data );
-		 }
-		 return $data;
-	 }
+	* Sanitize user data
+	*
+	* Example usage:
+	* $user_name = $database->filter( $_POST['user_name'] );
+	*
+	* Or to filter an entire array:
+	* $data = array( 'name' => $_POST['name'], 'email' => 'email@address.com' );
+	* $data = $database->filter( $data );
+	*
+	* @access public
+	* @param mixed $data
+	* @return mixed $data
+	*/
+	public function filter( $data )
+	{
+		if( !is_array( $data ) )
+		{
+			$data = $this->link->real_escape_string( $data );
+			$data = trim( htmlentities( $data, ENT_QUOTES, 'UTF-8', false ) );
+		}
+		else
+		{
+			//Self call function to sanitize array data
+			$data = array_map( array( $this, 'filter' ), $data );
+		}
+		return $data;
+	}
 
 
 	/**
-	 * Normalize sanitized data for display (reverse $database->filter cleaning)
-	 *
-	 * Example usage:
-	 * echo $database->clean( $data_from_database );
-	 *
-	 * @access public
-	 * @param string $data
-	 * @return string $data
-	 */
-	 public function clean( $data )
-	 {
-		 $data = stripslashes( $data );
-		 $data = html_entity_decode( $data, ENT_QUOTES, 'UTF-8' );
-		 $data = nl2br( $data );
-		 $data = urldecode( $data );
-		 return $data;
-	 }
+	* Extra function to filter when only mysqli_real_escape_string is needed
+	* @access public
+	* @param mixed $data
+	* @return mixed $data
+	*/
+	public function escape( $data )
+	{
+		if( !is_array( $data ) )
+		{
+			$data = $this->link->real_escape_string( $data );
+		}
+		else
+		{
+			//Self call function to sanitize array data
+			$data = array_map( array( $this, 'escape' ), $data );
+		}
+		return $data;
+	}
 
 
 	/**
-	 * Determine if common non-encapsulated fields are being used
-	 *
-	 * Example usage:
-	 * if( $database->db_common( $query ) )
-	 * {
-	 *      //Do something
-	 * }
-	 * Used by function exists
-	 *
-	 * @access public
-	 * @param string
-	 * @param array
-	 * @return bool
-	 *
-	 */
+	* Normalize sanitized data for display (reverse $database->filter cleaning)
+	*
+	* Example usage:
+	* echo $database->clean( $data_from_database );
+	*
+	* @access public
+	* @param string $data
+	* @return string $data
+	*/
+	public function clean( $data )
+	{
+		$data = stripslashes( $data );
+		$data = html_entity_decode( $data, ENT_QUOTES, 'UTF-8' );
+		$data = nl2br( $data );
+		$data = urldecode( $data );
+		return $data;
+	}
+
+
+	/**
+	* Determine if common non-encapsulated fields are being used
+	*
+	* Example usage:
+	* if( $database->db_common( $query ) )
+	* {
+	*      //Do something
+	* }
+	* Used by function exists
+	*
+	* @access public
+	* @param string
+	* @param array
+	* @return bool
+	*
+	*/
 	public function db_common( $value = '' )
 	{
 		if( is_array( $value ) )
@@ -375,16 +381,16 @@ class DB
 
 
 	/**
-	 * Perform queries
-	 * All following functions run through this function
-	 *
-	 * @access public
-	 * @param string
-	 * @return string
-	 * @return array
-	 * @return bool
-	 *
-	 */
+	* Perform queries
+	* All following functions run through this function
+	*
+	* @access public
+	* @param string
+	* @return string
+	* @return array
+	* @return bool
+	*
+	*/
 	public function query( $query )
 	{
 		$this->log_queries( $query );
@@ -403,55 +409,59 @@ class DB
 
 
 	/**
-	 * Determine if database table exists
-	 * Example usage:
-	 * if( !$database->table_exists( 'checkingfortable' ) )
-	 * {
-	 *      //Install your table or throw error
-	 * }
-	 *
-	 * @access public
-	 * @param string
-	 * @return bool
-	 *
-	 */
-	 public function table_exists( $table )
-	 {
-		 self::$counter++;
-		 $check = $this->link->query( "SELECT 1 FROM $table" );
-		 if( $check !== false )
-		 {
-			 if( $check->num_rows > 0 )
-			 {
-				 return true;
-			 }
-			 else
-			 {
-				 return false;
-			 }
-		 }
-		 else
-		 {
-			 return false;
-		 }
-	 }
+	* Determine if database table exists
+	* Example usage:
+	* if( !$database->table_exists( 'checkingfortable' ) )
+	* {
+	*      //Install your table or throw error
+	* }
+	*
+	* @access public
+	* @param string
+	* @return bool
+	*
+	*/
+	public function table_exists( $table )
+	{
+		self::$counter++;
+
+		$check = $this->link->query( "SELECT 1 FROM $table" );
+
+		if( $check !== false )
+		{
+			if( $check->num_rows > 0 )
+			{
+				return true;
+			}
+			else
+			{
+				return false;
+			}
+		}
+		else
+		{
+			return false;
+		}
+	}
 
 
 	/**
-	 * Count number of rows found matching a specific query
-	 *
-	 * Example usage:
-	 * $rows = $database->num_rows( "SELECT id FROM users WHERE user_id = 44" );
-	 *
-	 * @access public
-	 * @param string
-	 * @return int
-	 *
-	 */
+	* Count number of rows found matching a specific query
+	*
+	* Example usage:
+	* $rows = $database->num_rows( "SELECT id FROM users WHERE user_id = 44" );
+	*
+	* @access public
+	* @param string
+	* @return int
+	*
+	*/
 	public function num_rows( $query )
 	{
 		self::$counter++;
+
 		$num_rows = $this->link->query( $query );
+
 		if( $this->link->error )
 		{
 			$this->log_db_errors( $this->link->error, $query );
@@ -465,22 +475,22 @@ class DB
 
 
 	/**
-	 * Run check to see if value exists, returns true or false
-	 *
-	 * Example Usage:
-	 * $check_user = array(
-	 *    'user_email' => 'someuser@gmail.com',
-	 *    'user_id' => 48
-	 * );
-	 * $exists = $database->exists( 'your_table', 'user_id', $check_user );
-	 *
-	 * @access public
-	 * @param string database table name
-	 * @param string field to check (i.e. 'user_id' or COUNT(user_id))
-	 * @param array column name => column value to match
-	 * @return bool
-	 *
-	 */
+	* Run check to see if value exists, returns true or false
+	*
+	* Example Usage:
+	* $check_user = array(
+	*    'user_email' => 'someuser@gmail.com',
+	*    'user_id' => 48
+	* );
+	* $exists = $database->exists( 'your_table', 'user_id', $check_user );
+	*
+	* @access public
+	* @param string database table name
+	* @param string field to check (i.e. 'user_id' or COUNT(user_id))
+	* @param array column name => column value to match
+	* @return bool
+	*
+	*/
 	public function exists( $table = '', $check_val = '', $params = array() )
 	{
 		self::$counter++;
@@ -520,22 +530,23 @@ class DB
 	}
 
 	/**
-	 * Return specific row based on db query
-	 *
-	 * Example usage:
-	 * list( $name, $email ) = $database->get_array( "SELECT name, email FROM users WHERE user_id = 44" );
-	 *
-	 * @access public
-	 * @param string
-	 * @param bool $object (true returns results as objects)
-	 * @return array
-	 *
-	 */
+	* Return specific row based on db query
+	*
+	* Example usage:
+	* list( $name, $email ) = $database->get_array( "SELECT name, email FROM users WHERE user_id = 44" );
+	*
+	* @access public
+	* @param string
+	* @param bool $object (true returns results as objects)
+	* @return array
+	*
+	*/
 	public function get_array( $query, $type = MYSQLI_ASSOC )
 	{
-		$this->log_queries( $query );
 		self::$counter++;
+
 		$row = $this->link->query( $query );
+
 		if( $this->link->error )
 		{
 			$this->log_db_errors( $this->link->error, $query );
@@ -552,22 +563,23 @@ class DB
 	}
 
 	/**
-	 * Return specific row based on db query
-	 *
-	 * Example usage:
-	 * list( $name, $email ) = $database->get_row( "SELECT name, email FROM users WHERE user_id = 44" );
-	 *
-	 * @access public
-	 * @param string
-	 * @param bool $object (true returns results as objects)
-	 * @return array
-	 *
-	 */
+	* Return specific row based on db query
+	*
+	* Example usage:
+	* list( $name, $email ) = $database->get_row( "SELECT name, email FROM users WHERE user_id = 44" );
+	*
+	* @access public
+	* @param string
+	* @param bool $object (true returns results as objects)
+	* @return array
+	*
+	*/
 	public function get_row( $query, $object = false )
 	{
-		$this->log_queries( $query );
 		self::$counter++;
+
 		$row = $this->link->query( $query );
+
 		if( $this->link->error )
 		{
 			$this->log_db_errors( $this->link->error, $query );
@@ -581,26 +593,26 @@ class DB
 	}
 
 	/**
-	 * Perform query to retrieve single result
-	 *
-	 * Example usage:
-	 * echo $database->get_result( "SELECT name, email FROM users ORDER BY name ASC" );
-	 *
-	 * @access public
-	 * @param string
-	 * @param int|string    (Can be either position in the array or the name of the returned field)
-	 * @return string
-	 *
-	 */
+	* Perform query to retrieve single result
+	*
+	* Example usage:
+	* echo $database->get_result( "SELECT name, email FROM users ORDER BY name ASC" );
+	*
+	* @access public
+	* @param string
+	* @param int|string    (Can be either position in the array or the name of the returned field)
+	* @return string
+	*
+	*/
 	public function get_result( $query, $pos = 0 )
 	{
-		$this->log_queries( $query );
-
 		self::$counter++;
+
 		//Overwrite the $row var to null
 		$row = null;
 
 		$results = $this->link->query( $query );
+
 		if( $this->link->error )
 		{
 			$this->log_db_errors( $this->link->error, $query );
@@ -617,30 +629,30 @@ class DB
 
 
 	/**
-	 * Perform query to retrieve array of associated results
-	 *
-	 * Example usage:
-	 * $users = $database->get_results( "SELECT name, email FROM users ORDER BY name ASC" );
-	 * foreach( $users as $user )
-	 * {
-	 *      echo $user['name'] . ': '. $user['email'] .'<br />';
-	 * }
-	 *
-	 * @access public
-	 * @param string
-	 * @param bool $object (true returns object)
-	 * @return array
-	 *
-	 */
+	* Perform query to retrieve array of associated results
+	*
+	* Example usage:
+	* $users = $database->get_results( "SELECT name, email FROM users ORDER BY name ASC" );
+	* foreach( $users as $user )
+	* {
+	*      echo $user['name'] . ': '. $user['email'] .'<br />';
+	* }
+	*
+	* @access public
+	* @param string
+	* @param bool $object (true returns object)
+	* @return array
+	*
+	*/
 	public function get_results( $query, $object = false )
 	{
-		$this->log_queries( $query );
-
 		self::$counter++;
+
 		//Overwrite the $row var to null
 		$row = null;
 
 		$results = $this->link->query( $query );
+
 		if( $this->link->error )
 		{
 			$this->log_db_errors( $this->link->error, $query );
@@ -659,45 +671,50 @@ class DB
 
 
 	/**
-	 * Insert data into database table
-	 *
-	 * Example usage:
-	 * $user_data = array(
-	 *      'name' => 'Bennett',
-	 *      'email' => 'email@address.com',
-	 *      'active' => 1
-	 * );
-	 * $database->insert( 'users_table', $user_data );
-	 *
-	 * @access public
-	 * @param string table name
-	 * @param array table column => column value
-	 * @return bool
-	 *
-	 */
+	* Insert data into database table
+	*
+	* Example usage:
+	* $user_data = array(
+	*      'name' => 'Bennett',
+	*      'email' => 'email@address.com',
+	*      'active' => 1
+	* );
+	* $database->insert( 'users_table', $user_data );
+	*
+	* @access public
+	* @param string table name
+	* @param array table column => column value
+	* @return bool
+	*
+	*/
 	public function insert( $table, $variables = array() )
 	{
-		$this->log_queries( $query );
-
 		self::$counter++;
+
 		//Make sure the array isn't empty
 		if( empty( $variables ) )
 		{
 			return false;
 		}
 
+		$variables = $this->filter( $variables );
+
 		$sql = "INSERT INTO ". $table;
+
 		$fields = array();
 		$values = array();
+
 		foreach( $variables as $field => $value )
 		{
 			$fields[] = $field;
-			if ($value === NULL){
+			if ($value === NULL)
+			{
 				$values[] = "NULL";
 			} else {
 				$values[] = "'".$value."'";
 			}
 		}
+
 		$fields = ' (' . implode(', ', $fields) . ')';
 		$values = '('. implode(', ', $values) .')';
 
@@ -718,43 +735,42 @@ class DB
 
 
 	/**
-	 * Insert multiple records in a single query into a database table
-	 *
-	 * Example usage:
-	 * $fields = array(
-	 *      'name',
-	 *      'email',
-	 *      'active'
-	 *  );
-	 *  $records = array(
-	 *     array(
-	 *          'Bennett', 'bennett@email.com', 1
-	 *      ),
-	 *      array(
-	 *          'Lori', 'lori@email.com', 0
-	 *      ),
-	 *      array(
-	 *          'Nick', 'nick@nick.com', 1, 'This will not be added'
-	 *      ),
-	 *      array(
-	 *          'Meghan', 'meghan@email.com', 1
-	 *      )
-	 * );
-	 *  $database->insert_multi( 'users_table', $fields, $records );
-	 *
-	 * @access public
-	 * @param string table name
-	 * @param array table columns
-	 * @param nested array records
-	 * @return bool
-	 * @return int number of records inserted
-	 *
-	 */
+	* Insert multiple records in a single query into a database table
+	*
+	* Example usage:
+	* $fields = array(
+	*      'name',
+	*      'email',
+	*      'active'
+	*  );
+	*  $records = array(
+	*     array(
+	*          'Bennett', 'bennett@email.com', 1
+	*      ),
+	*      array(
+	*          'Lori', 'lori@email.com', 0
+	*      ),
+	*      array(
+	*          'Nick', 'nick@nick.com', 1, 'This will not be added'
+	*      ),
+	*      array(
+	*          'Meghan', 'meghan@email.com', 1
+	*      )
+	* );
+	*  $database->insert_multi( 'users_table', $fields, $records );
+	*
+	* @access public
+	* @param string table name
+	* @param array table columns
+	* @param nested array records
+	* @return bool
+	* @return int number of records inserted
+	*
+	*/
 	public function insert_multi( $table, $columns = array(), $records = array() )
 	{
-		$this->log_queries( $query );
-
 		self::$counter++;
+
 		//Make sure the arrays aren't empty
 		if( empty( $columns ) || empty( $records ) )
 		{
@@ -771,6 +787,7 @@ class DB
 		$sql = "INSERT INTO ". $table;
 
 		$fields = array();
+
 		//Loop through the columns for insertion preparation
 		foreach( $columns as $field )
 		{
@@ -780,6 +797,9 @@ class DB
 
 		//Loop through the records to insert
 		$values = array();
+
+		$records = $this->filter( $records );
+
 		foreach( $records as $record )
 		{
 			//Only add a record if the values match the number of columns
@@ -808,31 +828,31 @@ class DB
 
 
 	/**
-	 * Update data in database table
-	 *
-	 * Example usage:
-	 * $update = array( 'name' => 'Not bennett', 'email' => 'someotheremail@email.com' );
-	 * $update_where = array( 'user_id' => 44, 'name' => 'Bennett' );
-	 * $database->update( 'users_table', $update, $update_where, 1 );
-	 *
-	 * @access public
-	 * @param string table name
-	 * @param array values to update table column => column value
-	 * @param array where parameters table column => column value
-	 * @param int limit
-	 * @return bool
-	 *
-	 */
-	public function update( $table, $variables = array(), $where = array(), $limit = '' )
+	* Update data in database table
+	*
+	* Example usage:
+	* $update = array( 'name' => 'Not bennett', 'email' => 'someotheremail@email.com' );
+	* $update_where = array( 'user_id' => 44, 'name' => 'Bennett' );
+	* $database->update( 'users_table', $update, $update_where, 1 );
+	*
+	* @access public
+	* @param string table name
+	* @param array values to update table column => column value
+	* @param array where parameters table column => column value
+	* @param int limit
+	* @return bool
+	*
+	*/
+	public function update( $table, $variables = array(), $where = array(), $limit = NULL)
 	{
-		$this->log_queries( $query );
-
 		self::$counter++;
 
 		if( empty( $variables ) )
 		{
 			return false;
 		}
+
+		$variables = $this->filter( $variables );
 
 		$sql = "UPDATE ". $table ." SET ";
 		foreach( $variables as $field => $value )
@@ -858,7 +878,7 @@ class DB
 			$sql .= ' WHERE '. implode(' AND ', $clause);
 		}
 
-		if( !empty( $limit ) )
+		if( $limit !== NULL )
 		{
 			$sql .= ' LIMIT '. $limit;
 		}
@@ -875,30 +895,29 @@ class DB
 			return true;
 		}
 	}
-	
-	
+
+
 	/**
-	 * Upserts data into database table
-	 *
-	 * Example usage:
-	 * $user_data = array(
-	 *      'name' => 'Bennett',
-	 *      'email' => 'email@address.com',
-	 *      'active' => 1
-	 * );
-	 * $database->upsert( 'users_table', $user_data);
-	 *
-	 * @access public
-	 * @param string table name
-	 * @param array table column => column value
-	 * @return bool
-	 *
-	 */
+	* Upserts data into database table
+	*
+	* Example usage:
+	* $user_data = array(
+	*      'name' => 'Bennett',
+	*      'email' => 'email@address.com',
+	*      'active' => 1
+	* );
+	* $database->upsert( 'users_table', $user_data);
+	*
+	* @access public
+	* @param string table name
+	* @param array table column => column value
+	* @return bool
+	*
+	*/
 	public function upsert( $table, $variables = array() )
 	{
-		$this->log_queries( $query );
-
 		self::$counter++;
+
 		//Make sure the args aren't empty
 		if( empty( $table ) || empty( $variables ) )
 		{
@@ -906,18 +925,23 @@ class DB
 		}
 
 		$sql = "INSERT INTO ". $table;
+
 		$fields = array();
 		$values = array();
-        	$updates = array();
+		$updates = array();
+
+		$variables = $this->filter( $variables );
+
 		foreach( $variables as $field => $value )
 		{
 			$fields[] = $field;
-			if ($value === NULL){
+			if ($value === NULL)
+			{
 				$values[] = "NULL";
-                		$updates[] = "`$field` = NULL";
+				$updates[] = "`$field` = NULL";
 			} else {
 				$values[] = "'".$value."'";
-                		$updates[] = "`$field` = '$value'";
+				$updates[] = "`$field` = '$value'";
 			}
 		}
 		$fields = ' (' . implode(', ', $fields) . ')';
@@ -927,7 +951,7 @@ class DB
 
 		$sql .= ' ON DUPLICATE KEY UPDATE ';
 
-        	$sql .= implode(', ', $updates);
+		$sql .= implode(', ', $updates);
 
 		$query = $this->link->query( $sql );
 
@@ -941,27 +965,26 @@ class DB
 			return true;
 		}
 	}
-	
-	
-	/**
-	 * Delete data from table
-	 *
-	 * Example usage:
-	 * $where = array( 'user_id' => 44, 'email' => 'someotheremail@email.com' );
-	 * $database->delete( 'users_table', $where, 1 );
-	 *
-	 * @access public
-	 * @param string table name
-	 * @param array where parameters table column => column value
-	 * @param int max number of rows to remove.
-	 * @return bool
-	 *
-	 */
-	public function delete( $table, $where = array(), $limit = '' )
-	{
-		$this->log_queries( $query );
 
+
+	/**
+	* Delete data from table
+	*
+	* Example usage:
+	* $where = array( 'user_id' => 44, 'email' => 'someotheremail@email.com' );
+	* $database->delete( 'users_table', $where, 1 );
+	*
+	* @access public
+	* @param string table name
+	* @param array where parameters table column => column value
+	* @param int max number of rows to remove.
+	* @return bool
+	*
+	*/
+	public function delete( $table, $where = array(), $limit = NULL )
+	{
 		self::$counter++;
+
 		//Delete clauses require a where param, otherwise use "truncate"
 		if( empty( $where ) )
 		{
@@ -969,14 +992,16 @@ class DB
 		}
 
 		$sql = "DELETE FROM ". $table;
+
 		foreach( $where as $field => $value )
 		{
 			$value = $value;
 			$clause[] = "$field = '$value'";
 		}
+
 		$sql .= " WHERE ". implode(' AND ', $clause);
 
-		if( !empty( $limit ) )
+		if( $limit !== NULL )
 		{
 			$sql .= " LIMIT ". $limit;
 		}
@@ -997,17 +1022,17 @@ class DB
 
 
 	/**
-	 * Get last auto-incrementing ID associated with an insertion
-	 *
-	 * Example usage:
-	 * $database->insert( 'users_table', $user );
-	 * $last = $database->lastid();
-	 *
-	 * @access public
-	 * @param none
-	 * @return int
-	 *
-	 */
+	* Get last auto-incrementing ID associated with an insertion
+	*
+	* Example usage:
+	* $database->insert( 'users_table', $user );
+	* $last = $database->lastid();
+	*
+	* @access public
+	* @param none
+	* @return int
+	*
+	*/
 	public function lastid()
 	{
 		self::$counter++;
@@ -1016,16 +1041,16 @@ class DB
 
 
 	/**
-	 * Return the number of rows affected by a given query
-	 *
-	 * Example usage:
-	 * $database->insert( 'users_table', $user );
-	 * $database->affected();
-	 *
-	 * @access public
-	 * @param none
-	 * @return int
-	 */
+	* Return the number of rows affected by a given query
+	*
+	* Example usage:
+	* $database->insert( 'users_table', $user );
+	* $database->affected();
+	*
+	* @access public
+	* @param none
+	* @return int
+	*/
 	public function affected()
 	{
 		return $this->link->affected_rows;
@@ -1033,15 +1058,15 @@ class DB
 
 
 	/**
-	 * Get number of fields
-	 *
-	 * Example usage:
-	 * echo $database->num_fields( "SELECT * FROM users_table" );
-	 *
-	 * @access public
-	 * @param query
-	 * @return int
-	 */
+	* Get number of fields
+	*
+	* Example usage:
+	* echo $database->num_fields( "SELECT * FROM users_table" );
+	*
+	* @access public
+	* @param query
+	* @return int
+	*/
 	public function num_fields( $query )
 	{
 		self::$counter++;
@@ -1052,18 +1077,18 @@ class DB
 
 
 	/**
-	 * Get field names associated with a table
-	 *
-	 * Example usage:
-	 * $fields = $database->list_fields( "SELECT * FROM users_table" );
-	 * echo '<pre>';
-	 * print_r( $fields );
-	 * echo '</pre>';
-	 *
-	 * @access public
-	 * @param query
-	 * @return array
-	 */
+	* Get field names associated with a table
+	*
+	* Example usage:
+	* $fields = $database->list_fields( "SELECT * FROM users_table" );
+	* echo '<pre>';
+	* print_r( $fields );
+	* echo '</pre>';
+	*
+	* @access public
+	* @param query
+	* @return array
+	*/
 	public function list_fields( $query )
 	{
 		self::$counter++;
@@ -1074,17 +1099,17 @@ class DB
 
 
 	/**
-	 * Truncate entire tables
-	 *
-	 * Example usage:
-	 * $remove_tables = array( 'users_table', 'user_data' );
-	 * echo $database->truncate( $remove_tables );
-	 *
-	 * @access public
-	 * @param array database table names
-	 * @return int number of tables truncated
-	 *
-	 */
+	* Truncate entire tables
+	*
+	* Example usage:
+	* $remove_tables = array( 'users_table', 'user_data' );
+	* echo $database->truncate( $remove_tables );
+	*
+	* @access public
+	* @param array database table names
+	* @return int number of tables truncated
+	*
+	*/
 	public function truncate( $tables = array() )
 	{
 		if( !empty( $tables ) )
@@ -1105,17 +1130,17 @@ class DB
 	}
 
 	/**
-	 * Optimize tables
-	 *
-	 * Example usage:
-	 * $tables = array( 'users_table', 'user_data' );
-	 * echo $database->optimize( $tables );
-	 *
-	 * @access public
-	 * @param array database table names
-	 * @return int number of tables truncated
-	 *
-	 */
+	* Optimize tables
+	*
+	* Example usage:
+	* $tables = array( 'users_table', 'user_data' );
+	* echo $database->optimize( $tables );
+	*
+	* @access public
+	* @param array database table names
+	* @return int number of tables truncated
+	*
+	*/
 	public function optimize( $tables = array() )
 	{
 		if( !empty( $tables ) )
@@ -1137,17 +1162,17 @@ class DB
 
 
 	/**
-	 * Output the total number of queries
-	 * Generally designed to be used at the bottom of a page after
-	 * scripts have been run and initialized as needed
-	 *
-	 * Example usage:
-	 * echo 'There were '. $database->total_queries() . ' performed';
-	 *
-	 * @access public
-	 * @param none
-	 * @return int
-	 */
+	* Output the total number of queries
+	* Generally designed to be used at the bottom of a page after
+	* scripts have been run and initialized as needed
+	*
+	* Example usage:
+	* echo 'There were '. $database->total_queries() . ' performed';
+	*
+	* @access public
+	* @param none
+	* @return int
+	*/
 	public function total_queries()
 	{
 		return self::$counter;
@@ -1155,14 +1180,14 @@ class DB
 
 
 	/**
-	 * Singleton function
-	 *
-	 * Example usage:
-	 * $database = DB::getInstance();
-	 *
-	 * @access private
-	 * @return self
-	 */
+	* Singleton function
+	*
+	* Example usage:
+	* $database = DB::getInstance();
+	*
+	* @access private
+	* @return self
+	*/
 	static function get_instance()
 	{
 		if( self::$inst == null )
@@ -1174,9 +1199,9 @@ class DB
 
 
 	/**
-	 * Disconnect from db server
-	 * Called automatically from __destruct function
-	 */
+	* Disconnect from db server
+	* Called automatically from __destruct function
+	*/
 	public function disconnect()
 	{
 		$this->link->close();
