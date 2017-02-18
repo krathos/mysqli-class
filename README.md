@@ -14,7 +14,7 @@ This class can:
 - Check of a table exists
 - Check of a given table record exists
 - Return a query result that has just one row
-- Execute INSERT, UPDATE and DELETE queries from values that define tables, field names, field values and conditions
+- Execute INSERT, UPDATE, UPSERT(!!!) and DELETE queries from values that define tables, field names, field values and conditions
 - Truncate a table or tables
 - Optimize a table or tables
 - Send email messages with MySQL access and query errors
