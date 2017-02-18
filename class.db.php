@@ -12,7 +12,7 @@
  *
  *
  * @link              https://github.com/nowendwell/mysqli-class
- * @version           1.2.1
+ * @version           1.2.2
  *
  * Description:       This is a short description of what the plugin does. It's displayed in the WordPress admin area.
  * Last Update:       2017-02-18
@@ -592,7 +592,7 @@ class DB
 	 * @return string
 	 *
 	 */
-	public function get_result( $query, $pos = null )
+	public function get_result( $query, $pos = 0 )
 	{
 		$this->log_queries( $query );
 
@@ -611,12 +611,7 @@ class DB
 			$row = array();
 			$result = $results->fetch_array();
 
-			if ( $pos != null)
-			{
-				return $result[0];
-			} else {
-				return $result[$pos];
-			}
+			return $result[$pos];
 		}
 	}
 
