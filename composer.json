@@ -1,0 +1,20 @@
+{
+    "name": "nowendwell/mysqli-class",
+    "type": "library",
+    "description": "MYSQLi Wrapper",
+    "keywords": ["mysql","mysqli","wrapper","database"],
+    "homepage": "https://github.com/nowendwell/mysqli-class",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Ben Miller",
+            "email": "nowendwell@gmail.com",
+            "homepage": "https://github.com/nowendwell/",
+            "role": "Developer"
+        }
+    ],
+    "require": {
+        "php": ">=5.3.0",
+        "ext-mysqli": "*"
+    }
+}
