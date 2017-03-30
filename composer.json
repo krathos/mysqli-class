@@ -12,8 +12,5 @@
             "homepage": "https://github.com/nowendwell/",
             "role": "Developer"
         }
-    ],
-    "require": {
-        "php": ">=5.5"
-    }
+    ]
 }
