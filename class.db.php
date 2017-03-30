@@ -12,10 +12,10 @@
 *
 *
 * @link              https://github.com/nowendwell/mysqli-class
-* @version           1.3.0
+* @version           1.3.1
 *
-* Description:       This is a short description of what the plugin does. It's displayed in the WordPress admin area.
-* Last Update:       2017-02-18
+* Description:       A MYSQLi database wrapper for PHP
+* Last Update:       2017-03-30
 * Author:            Ben Miller
 * License:           MIT
 * License URI:       https://opensource.org/licenses/MIT
