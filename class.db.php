@@ -12,10 +12,10 @@
 *
 *
 * @link              https://github.com/nowendwell/mysqli-class
-* @version           1.3.1
+* @version           1.4.1
 *
 * Description:       A MYSQLi database wrapper for PHP
-* Last Update:       2017-03-30
+* Last Update:       2018-04-05
 * Author:            Ben Miller
 * License:           MIT
 * License URI:       https://opensource.org/licenses/MIT
@@ -49,6 +49,9 @@ define( 'DISPLAY_DEBUG', true );
 /** Log all queries */
 define( 'SAVE_QUERIES_TO_LOG', false );
 
+/** Flag for Transactions */
+define( 'USE_TRANSACTIONS', false );
+
 
 class DB
 {
@@ -57,6 +60,7 @@ class DB
 	static $inst = null;
 	public static $counter = 0;
 	public $queries = array();
+	private $transactions;
 
 	public function __construct()
 	{
@@ -76,8 +80,11 @@ class DB
 			$this->log_db_errors( "Connect failed", $this->link->connect_error );
 			exit("connect failed");
 		}
-
+		
 		$this->link->set_charset( "utf8" );
+
+		$this->transactions = ( USE_TRANSACTIONS ) ? true : false;			
+		
 	}
 
 	public function __destruct()
@@ -394,11 +401,27 @@ class DB
 	{
 		$this->log_queries( $query );
 
+		if ( $this->transactions == true )
+		{
+			$this->link->query('START TRANSACTION;');
+		}
+		
 		$full_query = $this->link->query( $query );
+		
+		if ( $this->transactions == true )
+		{
+			$this->link->query('COMMIT;');
+		}
 
 		if( $this->link->error )
 		{
 			$this->log_db_errors( $this->link->error, $query );
+			
+			if ( $this->transactions == true )
+			{
+				$this->link->query('ROLLBACK;');
+			}
+			
 			return false;
 		}
 		else
