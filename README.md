@@ -1,6 +1,8 @@
 MYSQLi Class
 =============
 
+**Please understand that using something like this in a modern application is a bad idea. This was created before PDO and Query Builders like those seen in Laravel, CodeIgniter, etc. I highly recommend Laravel if you are looking for a better way.**
+
 PHP class to access MySQL database wrapper using MySQLi
 
 This class can:
@@ -24,7 +26,7 @@ This class can:
 ```php
 require_once "class.db.php";
 $db = new DB();
-foreach( $db->get_results( "SELECT * FROM users_table" ) as $result )
+foreach( $db->getResults( "SELECT * FROM users_table" ) as $result )
 {
   $name = $result['name'];
   $email = $result['email'];
