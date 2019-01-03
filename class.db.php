@@ -12,7 +12,7 @@
  *
  *
  * @link              https://github.com/nowendwell/mysqli-class
- * @version           2.0.0
+ * @version           2.0.1
  *
  * Description:       A MYSQLi database wrapper for PHP
  * Last Update:       2018-04-05
