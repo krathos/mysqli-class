@@ -34,3 +34,42 @@ foreach( $db->getResults( "SELECT * FROM users_table" ) as $result )
   echo "Name: $name" . "<br />" . "Email: $email" . "<br /><br />";
 }
 ```
+## Stored Procedures  
+showProcedure($procedure)  
+callProcedure($procedure, $params = array(), $responses = array())  
+  
+## Filtering  
+filter($data)  
+escape($data)  
+clean($data)  
+  
+## Queries (Getting Data)  
+query($query)  
+getArray($query, $type = MYSQLI_ASSOC)  
+getRow($query, $object = false)  
+getResult($query, $pos = 0)  
+getResults($query, $object = false)  
+  
+## Queries (Storing Data)  
+insert($table, $variables = array())  
+insertMulti($table, $columns = array(), $records = array())  
+update($table, $variables = array(), $where = array(), $limit = null)  
+upsert($table, $data = array(), $where = array())  
+  
+## Checks  
+tableExists($table)  
+numRows($query)  
+exists($table = '', $check_val = '', $params = array())  
+  
+## Utilities  
+search($table, $where = array(), $limit = null)  
+delete($table, $where = array(), $limit = null)  
+affected()  
+numFields($query)  
+showColumns($table)  
+truncate($tables = array())  
+optimize($tables = array())  
+totalQueries()  
+lastQuery()  
+lastId()  
+  
