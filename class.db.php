@@ -87,9 +87,10 @@ class DB
     *
     * @access public
     * @param string (Name of the procedure)
+    * @param bool $object (true returns object)
     * @return array
     */
-    public function showProcedure($procedure)
+    public function showProcedure($procedure, $object = false)
     {
         if (empty($procedure)) {
             return false;
@@ -157,9 +158,10 @@ class DB
     *
     * @access public
     * @param string (Name of the function)
+    * @param bool $object (true returns object)
     * @return array
     */
-    public function showFunction($function)
+    public function showFunction($function, $object = false)
     {
         if (empty($function)) {
             return false;
